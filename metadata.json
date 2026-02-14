@@ -1,0 +1,5 @@
+{
+  "name": "TômCRM",
+  "description": "Quản lý tài chính nuôi tôm: Theo dõi thu chi, quản lý ví, báo cáo dòng tiền và xuất Excel.",
+  "requestFramePermissions": []
+}

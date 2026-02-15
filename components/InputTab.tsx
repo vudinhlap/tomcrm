@@ -49,13 +49,13 @@ export default function InputTab({ wallets, categories, customFields, onSave }: 
   return (
     <div className="p-4 animate-[fadeIn_0.3s_ease]">
       <div className="bg-white rounded-[14px] border border-borderLight shadow-sm p-5">
-        <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>Nhập chi phí</div>
+        <div style={{ fontSize: 22, fontWeight: 800, marginBottom: 16 }}>Nhập chi phí</div>
 
         {/* Amount */}
         <div className="mb-3.5">
           <FormLabel>Số tiền (VNĐ)</FormLabel>
           <FormInput sizing="lg"
-            className="text-expense"
+            className="text-expense font-numeric text-3xl font-bold h-16"
             type="text" inputMode="numeric" value={amount} onChange={e => setAmount(formatAmountInput(e.target.value))}
             placeholder="0" />
         </div>
@@ -112,7 +112,7 @@ export default function InputTab({ wallets, categories, customFields, onSave }: 
             value={note} onChange={e => setNote(e.target.value)} rows={2} placeholder="Nhập ghi chú..." />
         </div>
 
-        <button className="w-full flex justify-center items-center gap-2 p-4 bg-primary text-white rounded-lg font-bold text-[17px] hover:bg-primaryDark active:scale-95 transition-all" onClick={handleSave}>
+        <button className="w-full flex justify-center items-center gap-2 p-5 bg-primary text-white rounded-xl font-bold text-xl hover:bg-primaryDark active:scale-95 transition-all shadow-lg" onClick={handleSave}>
           <Icons.Check /> Lưu chi phí
         </button>
       </div>

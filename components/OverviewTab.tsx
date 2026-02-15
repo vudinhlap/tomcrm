@@ -96,9 +96,9 @@ export default function OverviewTab({ txns, wallets, categories }: OverviewTabPr
       }}>
         <div style={{
           fontSize: 42,
-          fontWeight: 800,
+          fontWeight: 700,
           color: '#c4432b',
-          fontFamily: '"Playfair Display", serif',
+          fontFamily: '"Outfit", sans-serif',
           letterSpacing: -1,
         }}>
           {formatMoney(totalExpense)}đ
@@ -139,7 +139,7 @@ export default function OverviewTab({ txns, wallets, categories }: OverviewTabPr
                   flexShrink: 0,
                 }} />
                 <span style={{ fontWeight: 600, color: '#1a2e28' }}>{item.name}</span>
-                <span style={{ color: '#8a9e96', fontWeight: 500 }}>{formatMoney(item.value)}</span>
+                <span className="font-numeric" style={{ color: '#8a9e96', fontWeight: 500 }}>{formatMoney(item.value)}</span>
               </div>
             ))}
           </div>
@@ -210,7 +210,7 @@ export default function OverviewTab({ txns, wallets, categories }: OverviewTabPr
             textAlign: 'center',
           }}>
             <div style={{ fontSize: 13, color: '#5a7068', fontWeight: 700 }}>Chi trong kỳ</div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: '#c4432b' }}>{formatMoney(rangeSummary.expense)}đ</div>
+            <div className="font-numeric" style={{ fontSize: 24, fontWeight: 700, color: '#c4432b' }}>{formatMoney(rangeSummary.expense)}đ</div>
           </div>
         </div>
 

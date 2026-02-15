@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TômCRM - Quản lý nuôi tôm</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
         theme: {
@@ -13,6 +13,7 @@
             fontFamily: {
               sans: ['"Nunito Sans"', 'sans-serif'],
               serif: ['"Playfair Display"', 'serif'],
+              numeric: ['"Outfit"', 'sans-serif'],
             },
             colors: {
               primary: "#0d6e5b",
@@ -44,6 +45,14 @@
       ::-webkit-scrollbar { width: 6px; height: 6px; }
       ::-webkit-scrollbar-track { background: transparent; }
       ::-webkit-scrollbar-thumb { background: #d4e0db; border-radius: 3px; }
+
+      /* Low-tech accessibility: Increase base size */
+      html { font-size: 18px; } /* Increased from default 16px */
+      body { line-height: 1.6; }
+      
+      button, input, select, textarea {
+        font-size: 1rem; /* Ensure form elements preserve scale */
+      }
     </style>
   <script type="importmap">
 {

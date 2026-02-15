@@ -108,7 +108,7 @@ export default function TransactionListTab({ txns, wallets, categories, customFi
                 </div>
               </div>
               <div className="text-right">
-                <div className={`text-lg font-extrabold ${flowColor(t.flow)}`}>
+                <div className={`text-xl font-bold font-numeric ${flowColor(t.flow)}`}>
                   {t.flow === "INCOME" ? "+" : t.flow === "EXPENSE" ? "-" : ""}{formatMoney(t.amount)}đ
                 </div>
                 {onDelete && (

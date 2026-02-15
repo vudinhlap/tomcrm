@@ -58,7 +58,7 @@ export default function SettingsTab({
       <div className="flex gap-1 mb-3.5 overflow-x-auto">
         {subTabs.map(st => (
           <button key={st.key} onClick={() => setSubTab(st.key)}
-            className={`px-3 py-1.5 whitespace-nowrap rounded-lg text-xs border-[1.5px] transition-all
+            className={`px-4 py-2 whitespace-nowrap rounded-lg text-sm font-semibold border-[1.5px] transition-all
               ${subTab === st.key ? "bg-primary text-white border-primary" : "bg-white text-textSecondary border-border"}`}>
             {st.label}
           </button>

@@ -65,6 +65,7 @@ export interface FeedJournal {
   image_url: string;
   note: string;
   created_at: string;
+  tags?: string[];
 }
 
 export interface NotificationState {

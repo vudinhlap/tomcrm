@@ -23,7 +23,7 @@ interface SupabaseData {
     addTransaction: (t: Omit<Transaction, 'id' | 'created_at' | 'updated_at'>) => Promise<Transaction | null>;
     softDeleteTransaction: (id: string) => Promise<boolean>;
     addAuditLog: (log: Omit<AuditLog, 'id' | 'created_at'>) => Promise<void>;
-    addFeedJournal: (entry: { journal_date: string; image_url: string; note: string }) => Promise<FeedJournal | null>;
+    addFeedJournal: (entry: { journal_date: string; image_url: string; note: string; tags: string[] }) => Promise<FeedJournal | null>;
     deleteFeedJournal: (id: string) => Promise<boolean>;
     uploadFeedImage: (file: File) => Promise<string | null>;
     refresh: () => Promise<void>;
@@ -174,9 +174,9 @@ export function useSupabaseData(ownerId: string | null): SupabaseData {
     }, [ownerId]);
 
     /* ---- Feed Journals ---- */
-    const addFeedJournal = useCallback(async (entry: { journal_date: string; image_url: string; note: string }): Promise<FeedJournal | null> => {
+    const addFeedJournal = useCallback(async (entry: { journal_date: string; image_url: string; note: string; tags: string[] }): Promise<FeedJournal | null> => {
         const { data, error } = await supabase.from('feed_journals')
-            .insert({ owner_id: ownerId, journal_date: entry.journal_date, image_url: entry.image_url, note: entry.note })
+            .insert({ owner_id: ownerId, journal_date: entry.journal_date, image_url: entry.image_url, note: entry.note, tags: entry.tags })
             .select().single();
         if (error || !data) return null;
         const mapped = mapFeedJournal(data);
@@ -240,5 +240,5 @@ function mapAuditLog(r: any): AuditLog {
     return { id: r.id, actor: r.actor, action: r.action, entity: r.entity, entity_id: r.entity_id, before_data: r.before_data, after_data: r.after_data, created_at: r.created_at };
 }
 function mapFeedJournal(r: any): FeedJournal {
-    return { id: r.id, owner_id: r.owner_id, journal_date: r.journal_date, image_url: r.image_url, note: r.note || '', created_at: r.created_at };
+    return { id: r.id, owner_id: r.owner_id, journal_date: r.journal_date, image_url: r.image_url, note: r.note || '', tags: r.tags || [], created_at: r.created_at };
 }

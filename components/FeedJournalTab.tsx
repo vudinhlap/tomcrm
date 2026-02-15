@@ -5,7 +5,7 @@ import { Icons } from './Icons';
 
 interface FeedJournalTabProps {
     feedJournals: FeedJournal[];
-    addFeedJournal: (entry: { journal_date: string; image_url: string; note: string }) => Promise<FeedJournal | null>;
+    addFeedJournal: (entry: { journal_date: string; image_url: string; note: string; tags: string[] }) => Promise<FeedJournal | null>;
     deleteFeedJournal: (id: string) => Promise<boolean>;
     uploadFeedImage: (file: File) => Promise<string | null>;
     readOnly: boolean;
@@ -17,6 +17,7 @@ export default function FeedJournalTab({
 }: FeedJournalTabProps) {
     const [journalDate, setJournalDate] = useState(formatDate(new Date()));
     const [note, setNote] = useState("");
+    const [selectedTags, setSelectedTags] = useState<string[]>([]);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [saving, setSaving] = useState(false);
@@ -31,6 +32,12 @@ export default function FeedJournalTab({
             reader.onload = () => setPreviewUrl(reader.result as string);
             reader.readAsDataURL(file);
         }
+    };
+
+    const toggleTag = (tag: string) => {
+        setSelectedTags(prev =>
+            prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+        );
     };
 
     const handleSave = async () => {
@@ -50,10 +57,12 @@ export default function FeedJournalTab({
                 journal_date: journalDate,
                 image_url: url,
                 note,
+                tags: selectedTags,
             });
             if (result) {
                 showNotification("Đã lưu nhật ký thức ăn!");
                 setNote("");
+                setSelectedTags([]);
                 setPreviewUrl(null);
                 setSelectedFile(null);
                 if (fileInputRef.current) fileInputRef.current.value = "";
@@ -164,6 +173,33 @@ export default function FeedJournalTab({
                         />
                     </div>
 
+                    {/* Tags */}
+                    <div style={{ marginBottom: 16 }}>
+                        <label style={{ fontSize: 15, fontWeight: 700, color: '#5a7068', display: 'block', marginBottom: 8 }}>Loại</label>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                            {['Nước', 'Thức ăn', 'Thuốc', 'Tôm'].map(tag => (
+                                <button
+                                    key={tag}
+                                    onClick={() => toggleTag(tag)}
+                                    style={{
+                                        padding: '6px 14px',
+                                        borderRadius: 20,
+                                        fontSize: 14,
+                                        fontWeight: 600,
+                                        border: '1.5px solid',
+                                        borderColor: selectedTags.includes(tag) ? '#0d6e5b' : '#d4e0db',
+                                        background: selectedTags.includes(tag) ? '#eafcf8' : '#fff',
+                                        color: selectedTags.includes(tag) ? '#0d6e5b' : '#5a7068',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s',
+                                    }}
+                                >
+                                    {tag}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Note */}
                     <div style={{ marginBottom: 18 }}>
                         <label style={{ fontSize: 15, fontWeight: 700, color: '#5a7068', display: 'block', marginBottom: 8 }}>Ghi chú</label>
@@ -248,6 +284,22 @@ export default function FeedJournalTab({
                                         <Icons.Clock />
                                         {entry.journal_date}
                                     </div>
+                                    {entry.tags && entry.tags.length > 0 && (
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                                            {entry.tags.map(tag => (
+                                                <span key={tag} style={{
+                                                    fontSize: 12,
+                                                    fontWeight: 700,
+                                                    color: '#0d6e5b',
+                                                    background: '#eafcf8',
+                                                    padding: '3px 8px',
+                                                    borderRadius: 12,
+                                                }}>
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
                                     {entry.note && (
                                         <div style={{
                                             fontSize: 15,

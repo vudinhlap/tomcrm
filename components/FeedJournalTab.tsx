@@ -177,7 +177,7 @@ export default function FeedJournalTab({
                     <div style={{ marginBottom: 16 }}>
                         <label style={{ fontSize: 15, fontWeight: 700, color: '#5a7068', display: 'block', marginBottom: 8 }}>Loại</label>
                         <div style={{ display: 'flex', gap: 8 }}>
-                            {['Nước', 'Thức ăn', 'Thuốc', 'Tôm'].map(tag => (
+                            {['Nước', 'Thức ăn', 'Thuốc'].map(tag => (
                                 <button
                                     key={tag}
                                     onClick={() => toggleTag(tag)}
@@ -272,18 +272,6 @@ export default function FeedJournalTab({
 
                                 {/* Right: Date + Note */}
                                 <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                                    <div style={{
-                                        fontSize: 15,
-                                        fontWeight: 800,
-                                        color: '#0d6e5b',
-                                        marginBottom: 8,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 6,
-                                    }}>
-                                        <Icons.Clock />
-                                        {entry.journal_date}
-                                    </div>
                                     {entry.tags && entry.tags.length > 0 && (
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
                                             {entry.tags.map(tag => (
@@ -300,6 +288,18 @@ export default function FeedJournalTab({
                                             ))}
                                         </div>
                                     )}
+                                    <div style={{
+                                        fontSize: 15,
+                                        fontWeight: 800,
+                                        color: '#0d6e5b',
+                                        marginBottom: 8,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 6,
+                                    }}>
+                                        <Icons.Clock />
+                                        {entry.journal_date}
+                                    </div>
                                     {entry.note && (
                                         <div style={{
                                             fontSize: 15,

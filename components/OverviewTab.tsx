@@ -94,11 +94,10 @@ export default function OverviewTab({ txns, wallets, categories }: OverviewTabPr
         border: '1.5px solid #e8efeb',
         boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
       }}>
-        <div style={{
+        <div className="font-numeric" style={{
           fontSize: 42,
           fontWeight: 700,
           color: '#c4432b',
-          fontFamily: '"Outfit", sans-serif',
           letterSpacing: -1,
         }}>
           {formatMoney(totalExpense)}đ

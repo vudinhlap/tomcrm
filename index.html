@@ -1,59 +1,86 @@
 <!DOCTYPE html>
 <html lang="vi">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TômCRM - Quản lý nuôi tôm</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['"Nunito Sans"', 'sans-serif'],
-              serif: ['"Playfair Display"', 'serif'],
-              numeric: ['"Outfit"', 'sans-serif'],
-            },
-            colors: {
-              primary: "#0d6e5b",
-              primaryLight: "#e6f5f0",
-              primaryDark: "#094d3f",
-              income: "#0a8754",
-              incomeLight: "#e5f5ed",
-              expense: "#c4432b",
-              expenseLight: "#fce8e4",
-              transfer: "#5b6abf",
-              transferLight: "#eceef8",
-              surface: "#ffffff",
-              surfaceAlt: "#f7faf9",
-              border: "#d4e0db",
-              borderLight: "#e8efeb",
-              text: "#1a2e28",
-              textSecondary: "#5a7068",
-              textMuted: "#8a9e96",
-              accent: "#d4883e",
-              accentLight: "#fdf3e7",
-              danger: "#c4432b",
-            }
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TômCRM - Quản lý nuôi tôm</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@700&family=Outfit:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Nunito Sans"', 'sans-serif'],
+            serif: ['"Playfair Display"', 'serif'],
+            numeric: ['"Outfit"', 'sans-serif'],
+          },
+          colors: {
+            primary: "#0d6e5b",
+            primaryLight: "#e6f5f0",
+            primaryDark: "#094d3f",
+            income: "#0a8754",
+            incomeLight: "#e5f5ed",
+            expense: "#c4432b",
+            expenseLight: "#fce8e4",
+            transfer: "#5b6abf",
+            transferLight: "#eceef8",
+            surface: "#ffffff",
+            surfaceAlt: "#f7faf9",
+            border: "#d4e0db",
+            borderLight: "#e8efeb",
+            text: "#1a2e28",
+            textSecondary: "#5a7068",
+            textMuted: "#8a9e96",
+            accent: "#d4883e",
+            accentLight: "#fdf3e7",
+            danger: "#c4432b",
           }
         }
       }
-    </script>
-    <style>
-      /* Custom scrollbar to match original design */
-      ::-webkit-scrollbar { width: 6px; height: 6px; }
-      ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb { background: #d4e0db; border-radius: 3px; }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar to match original design */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
 
-      /* Low-tech accessibility: Increase base size */
-      html { font-size: 18px; } /* Increased from default 16px */
-      body { line-height: 1.6; }
-      
-      button, input, select, textarea {
-        font-size: 1rem; /* Ensure form elements preserve scale */
-      }
-    </style>
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #d4e0db;
+      border-radius: 3px;
+    }
+
+    /* Low-tech accessibility: Increase base size */
+    html {
+      font-size: 18px;
+    }
+
+    /* Increased from default 16px */
+    body {
+      line-height: 1.6;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font-size: 1rem;
+      /* Ensure form elements preserve scale */
+    }
+
+    .font-numeric {
+      font-family: "Outfit", sans-serif !important;
+    }
+  </style>
   <script type="importmap">
 {
   "imports": {
@@ -65,10 +92,12 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
+  <link rel="stylesheet" href="/index.css">
 </head>
-  <body class="bg-[#f0f5f3] text-text">
-    <div id="root"></div>
+
+<body class="bg-[#f0f5f3] text-text">
+  <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>

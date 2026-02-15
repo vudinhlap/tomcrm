@@ -175,10 +175,26 @@ export function useSupabaseData(ownerId: string | null): SupabaseData {
 
     /* ---- Feed Journals ---- */
     const addFeedJournal = useCallback(async (entry: { journal_date: string; image_url: string; note: string; tags: string[] }): Promise<FeedJournal | null> => {
-        const { data, error } = await supabase.from('feed_journals')
+        // Attempt 1: Try to insert with tags
+        let { data, error } = await supabase.from('feed_journals')
             .insert({ owner_id: ownerId, journal_date: entry.journal_date, image_url: entry.image_url, note: entry.note, tags: entry.tags })
             .select().single();
-        if (error || !data) return null;
+
+        // Fallback: If error (likely missing 'tags' column), try inserting without tags
+        if (error) {
+            console.warn('Failed to insert with tags, retrying without tags...', error);
+            const retry = await supabase.from('feed_journals')
+                .insert({ owner_id: ownerId, journal_date: entry.journal_date, image_url: entry.image_url, note: entry.note })
+                .select().single();
+
+            if (retry.error) {
+                console.error('Error adding feed journal (retry failed):', retry.error);
+                return null;
+            }
+            data = retry.data;
+        }
+
+        if (!data) return null;
         const mapped = mapFeedJournal(data);
         setFeedJournals(prev => [mapped, ...prev]);
         return mapped;

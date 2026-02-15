@@ -1,5 +1,5 @@
 import React from 'react';
-import { Transaction, Wallet, Category, CustomField, AuditLog } from '../types';
+import { Transaction, Wallet, Category, CustomField, AuditLog, FeedJournal } from '../types';
 import CategoriesSettings from './settings/CategoriesSettings';
 import WalletsSettings from './settings/WalletsSettings';
 import CustomFieldsSettings from './settings/CustomFieldsSettings';
@@ -31,6 +31,7 @@ interface SettingsTabProps {
   showNotification: (msg: string, type?: "success" | "error") => void;
   addAuditLog: (action: any, entity: string, entity_id: any, before_data: any, after_data: any) => void;
   transactions: Transaction[];
+  feedJournals: FeedJournal[];
   readOnly?: boolean;
   supabaseData?: SupabaseDataProps;
 }
@@ -38,12 +39,11 @@ interface SettingsTabProps {
 export default function SettingsTab({
   subTab, setSubTab, wallets, categories, customFields,
   auditLogs, showNotification, addAuditLog, transactions,
-  readOnly, supabaseData,
+  feedJournals, readOnly, supabaseData,
 }: SettingsTabProps) {
   const subTabs = [
     { key: "categories", label: "Danh mục" },
     { key: "wallets", label: "Ví" },
-    { key: "customfields", label: "Trường tuỳ biến" },
     { key: "export", label: "Xuất Excel" },
     { key: "auditlog", label: "Nhật ký" },
   ];
@@ -86,7 +86,7 @@ export default function SettingsTab({
           readOnly={readOnly}
         />
       )}
-      {subTab === "export" && <ExportExcelTab transactions={transactions} wallets={wallets} categories={categories} customFields={customFields} auditLogs={auditLogs} showNotification={showNotification} addAuditLog={addAuditLog} />}
+      {subTab === "export" && <ExportExcelTab transactions={transactions} wallets={wallets} categories={categories} customFields={customFields} auditLogs={auditLogs} feedJournals={feedJournals} showNotification={showNotification} addAuditLog={addAuditLog} />}
       {subTab === "auditlog" && <AuditLogView auditLogs={auditLogs} />}
     </div>
   );

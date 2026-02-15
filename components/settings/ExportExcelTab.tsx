@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import * as XLSX from "xlsx";
-import { Transaction, Wallet, Category, CustomField, AuditLog } from '../../types';
-import { formatDate, formatMoney, formatAmountInput, parseAmount } from '../../utils';
+import { Transaction, Wallet, Category, CustomField, AuditLog, FeedJournal } from '../../types';
+import { formatDate, formatMoney } from '../../utils';
 import { Icons } from '../Icons';
 import { FormLabel, FormInput, FormSelect } from '../ui';
 
@@ -11,17 +11,17 @@ interface ExportExcelTabProps {
     categories: Category[];
     customFields: CustomField[];
     auditLogs: AuditLog[];
+    feedJournals: FeedJournal[];
     showNotification: (msg: string, type?: "success" | "error") => void;
     addAuditLog: (action: any, entity: string, entity_id: any, before_data: any, after_data: any) => void;
 }
 
-export default function ExportExcelTab({ transactions, wallets, categories, customFields, auditLogs, showNotification, addAuditLog }: ExportExcelTabProps) {
+export default function ExportExcelTab({ transactions, wallets, categories, customFields, auditLogs, feedJournals, showNotification, addAuditLog }: ExportExcelTabProps) {
     const [dateFrom, setDateFrom] = useState(() => { const d = new Date(); d.setDate(1); return formatDate(d); });
     const [dateTo, setDateTo] = useState(formatDate(new Date()));
     const [filterWallet, setFilterWallet] = useState("ALL");
-    const [includeAudit, setIncludeAudit] = useState(false);
-    const [includeCustomFields, setIncludeCustomFields] = useState(true);
-    const [exporting, setExporting] = useState(false);
+    const [exportingFinance, setExportingFinance] = useState(false);
+    const [exportingJournal, setExportingJournal] = useState(false);
 
     const filtered = useMemo(() => {
         return transactions.filter(t => {
@@ -31,8 +31,16 @@ export default function ExportExcelTab({ transactions, wallets, categories, cust
         }).sort((a, b) => a.txn_date.localeCompare(b.txn_date));
     }, [transactions, dateFrom, dateTo, filterWallet]);
 
-    const handleExport = () => {
-        setExporting(true);
+    const filteredJournals = useMemo(() => {
+        return feedJournals.filter(j => {
+            if (j.journal_date < dateFrom || j.journal_date > dateTo) return false;
+            return true;
+        }).sort((a, b) => a.journal_date.localeCompare(b.journal_date));
+    }, [feedJournals, dateFrom, dateTo]);
+
+    /* ── Export Financial Data ── */
+    const handleExportFinance = () => {
+        setExportingFinance(true);
         try {
             const wb = XLSX.utils.book_new();
 
@@ -52,7 +60,7 @@ export default function ExportExcelTab({ transactions, wallets, categories, cust
 
             const txnHeaders = ["Ngày", "Loại", "Số tiền", "Ví", "Ví đích", "Danh mục", "Ghi chú", "Ngày tạo"];
             const activeFields = customFields.filter(f => f.is_active);
-            if (includeCustomFields) activeFields.forEach(f => txnHeaders.push(f.field_name));
+            activeFields.forEach(f => txnHeaders.push(f.field_name));
 
             const txnRows = filtered.map(t => {
                 const w = wallets.find(w2 => w2.id === t.wallet_id);
@@ -60,15 +68,14 @@ export default function ExportExcelTab({ transactions, wallets, categories, cust
                 const cat = categories.find(c => c.id === t.category_id);
                 const flowLabel = t.flow === "INCOME" ? "Thu" : t.flow === "EXPENSE" ? "Chi" : "Chuyển khoản";
                 const row: any[] = [t.txn_date, flowLabel, t.amount, w?.name || "", tw?.name || "", cat?.name || "", t.note || "", t.created_at || ""];
-                if (includeCustomFields) {
-                    activeFields.forEach(f => { row.push(t.custom_fields?.[f.field_key] || ""); });
-                }
+                activeFields.forEach(f => { row.push(t.custom_fields?.[f.field_key] || ""); });
                 return row;
             });
             const wsTxn = XLSX.utils.aoa_to_sheet([txnHeaders, ...txnRows]);
             wsTxn["!cols"] = txnHeaders.map(h => ({ wch: Math.max(h.length + 2, 14) }));
             XLSX.utils.book_append_sheet(wb, wsTxn, "GIAO_DICH");
 
+            // Category summary
             const catMap: Record<string, any> = {};
             filtered.filter(t => t.flow !== "TRANSFER").forEach(t => {
                 const cat = categories.find(c => c.id === t.category_id);
@@ -84,83 +91,144 @@ export default function ExportExcelTab({ transactions, wallets, categories, cust
             wsCat["!cols"] = [{ wch: 25 }, { wch: 10 }, { wch: 18 }];
             XLSX.utils.book_append_sheet(wb, wsCat, "THEO_DANH_MUC");
 
-            const fileName = `TomCRM_${dateFrom}_${dateTo}.xlsx`;
+            const fileName = `TomCRM_TaiChinh_${dateFrom}_${dateTo}.xlsx`;
             XLSX.writeFile(wb, fileName);
 
-            addAuditLog("EXPORT", "EXPORT", null, null, { dateFrom, dateTo, filterWallet, txnCount: filtered.length, fileName });
-            showNotification(`Đã xuất ${filtered.length} giao dịch ra file Excel!`);
+            addAuditLog("EXPORT", "EXPORT_FINANCE", null, null, { dateFrom, dateTo, filterWallet, txnCount: filtered.length, fileName });
+            showNotification(`Đã xuất ${filtered.length} giao dịch tài chính!`);
         } catch (err: any) {
             console.error(err);
             showNotification("Lỗi khi xuất Excel: " + err.message, "error");
         } finally {
-            setExporting(false);
+            setExportingFinance(false);
         }
     };
 
-    let previewIncome = 0, previewExpense = 0;
+    /* ── Export Feed Journal ── */
+    const handleExportJournal = () => {
+        setExportingJournal(true);
+        try {
+            const wb = XLSX.utils.book_new();
+
+            const readmeData = [
+                ["NHẬT KÝ THỨC ĂN - TômCRM"],
+                [],
+                ["Ngày xuất", new Date().toLocaleString("vi-VN")],
+                ["Kỳ báo cáo", `${dateFrom} đến ${dateTo}`],
+                ["Tổng nhật ký", filteredJournals.length],
+                [],
+                ["Ghi chú: Cột 'Hình ảnh' chứa đường dẫn URL đến hình ảnh đã tải lên."],
+            ];
+            const wsReadme = XLSX.utils.aoa_to_sheet(readmeData);
+            wsReadme["!cols"] = [{ wch: 20 }, { wch: 50 }];
+            XLSX.utils.book_append_sheet(wb, wsReadme, "README");
+
+            const journalHeaders = ["Ngày", "Ghi chú", "Hình ảnh (URL)", "Ngày tạo"];
+            const journalRows = filteredJournals.map(j => [
+                j.journal_date,
+                j.note || "",
+                j.image_url || "",
+                j.created_at || "",
+            ]);
+            const wsJournal = XLSX.utils.aoa_to_sheet([journalHeaders, ...journalRows]);
+            wsJournal["!cols"] = [{ wch: 14 }, { wch: 40 }, { wch: 60 }, { wch: 22 }];
+            XLSX.utils.book_append_sheet(wb, wsJournal, "NHAT_KY_THUC_AN");
+
+            const fileName = `TomCRM_NhatKy_${dateFrom}_${dateTo}.xlsx`;
+            XLSX.writeFile(wb, fileName);
+
+            addAuditLog("EXPORT", "EXPORT_JOURNAL", null, null, { dateFrom, dateTo, count: filteredJournals.length, fileName });
+            showNotification(`Đã xuất ${filteredJournals.length} nhật ký thức ăn!`);
+        } catch (err: any) {
+            console.error(err);
+            showNotification("Lỗi khi xuất Excel: " + err.message, "error");
+        } finally {
+            setExportingJournal(false);
+        }
+    };
+
+    let previewExpense = 0;
     filtered.forEach(t => {
-        if (t.flow === "INCOME") previewIncome += t.amount;
         if (t.flow === "EXPENSE") previewExpense += t.amount;
     });
 
     return (
-        <div className="bg-white rounded-[14px] border border-borderLight shadow-sm p-4">
-            <div className="flex items-center gap-2 mb-1.5">
-                <Icons.Download />
-                <div className="text-[15px] font-bold">Xuất dữ liệu Excel</div>
-            </div>
-            <div className="text-xs text-textMuted mb-4">Xuất file Excel nhiều sheet để đối soát và lưu trữ</div>
-
-            <div className="flex gap-2 mb-3">
-                <div className="flex-1">
-                    <FormLabel>Từ ngày</FormLabel>
-                    <FormInput sizing="sm" type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Date range filter (shared) */}
+            <div className="bg-white rounded-[14px] border border-borderLight shadow-sm p-4">
+                <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 14 }}>
+                    📅 Chọn khoảng thời gian
                 </div>
-                <div className="flex-1">
-                    <FormLabel>Đến ngày</FormLabel>
-                    <FormInput sizing="sm" type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
-                </div>
-            </div>
-
-            <div className="mb-3">
-                <FormLabel>Lọc theo ví</FormLabel>
-                <FormSelect sizing="sm" value={filterWallet} onChange={e => setFilterWallet(e.target.value)}>
-                    <option value="ALL">Tất cả ví</option>
-                    {wallets.filter(w => w.is_active).map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
-                </FormSelect>
-            </div>
-
-            <div className="mb-4">
-                <FormLabel>Tuỳ chọn</FormLabel>
-                <div className="flex flex-col gap-2 mt-1">
-                    <label className="flex items-center gap-2 text-[13px] cursor-pointer">
-                        <input type="checkbox" checked={includeCustomFields} onChange={e => setIncludeCustomFields(e.target.checked)}
-                            className="w-4 h-4 accent-primary" />
-                        <span>Bao gồm trường tuỳ biến (Ao, Vụ, Đối tác...)</span>
-                    </label>
-                    <label className="flex items-center gap-2 text-[13px] cursor-pointer">
-                        <input type="checkbox" checked={includeAudit} onChange={e => setIncludeAudit(e.target.checked)}
-                            className="w-4 h-4 accent-primary" />
-                        <span>Bao gồm nhật ký kiểm soát (Audit log)</span>
-                    </label>
+                <div className="flex gap-2 mb-3">
+                    <div className="flex-1">
+                        <FormLabel>Từ ngày</FormLabel>
+                        <FormInput type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
+                    </div>
+                    <div className="flex-1">
+                        <FormLabel>Đến ngày</FormLabel>
+                        <FormInput type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} />
+                    </div>
                 </div>
             </div>
 
-            <div className="bg-surfaceAlt rounded-[10px] p-3.5 mb-4">
-                <div className="text-xs font-bold text-textSecondary mb-2 uppercase tracking-wide">Xem trước</div>
-                <div className="grid grid-cols-2 gap-2 text-[13px]">
-                    <div>Giao dịch: <b>{filtered.length}</b></div>
-                    <div>Tổng thu: <b className="text-income">{formatMoney(previewIncome)}đ</b></div>
-                    <div>Tổng chi: <b className="text-expense">{formatMoney(previewExpense)}đ</b></div>
-                    <div>Lợi nhuận: <b className={previewIncome - previewExpense >= 0 ? "text-income" : "text-expense"}>{formatMoney(previewIncome - previewExpense)}đ</b></div>
+            {/* Section 1: Financial Export */}
+            <div className="bg-white rounded-[14px] border border-borderLight shadow-sm p-4">
+                <div className="flex items-center gap-2 mb-2">
+                    <Icons.Download />
+                    <div style={{ fontSize: 17, fontWeight: 700 }}>💰 Xuất dữ liệu tài chính</div>
                 </div>
+                <div style={{ fontSize: 14, color: '#8a9e96', marginBottom: 14 }}>
+                    Xuất giao dịch thu/chi, tổng hợp theo danh mục
+                </div>
+
+                <div className="mb-3">
+                    <FormLabel>Lọc theo ví</FormLabel>
+                    <FormSelect value={filterWallet} onChange={e => setFilterWallet(e.target.value)}>
+                        <option value="ALL">Tất cả ví</option>
+                        {wallets.filter(w => w.is_active).map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
+                    </FormSelect>
+                </div>
+
+                <div className="bg-surfaceAlt rounded-[10px] p-3.5 mb-4">
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#5a7068', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Xem trước</div>
+                    <div className="grid grid-cols-2 gap-2" style={{ fontSize: 15 }}>
+                        <div>Giao dịch: <b>{filtered.length}</b></div>
+                        <div>Tổng chi: <b className="text-expense">{formatMoney(previewExpense)}đ</b></div>
+                    </div>
+                </div>
+
+                <button
+                    className="w-full flex justify-center items-center gap-2 p-4 bg-primary text-white rounded-lg font-bold text-[17px] hover:bg-primaryDark disabled:opacity-60 disabled:cursor-not-allowed active:scale-95 transition-all"
+                    onClick={handleExportFinance} disabled={exportingFinance || filtered.length === 0}>
+                    <Icons.Download />
+                    {exportingFinance ? "Đang xuất..." : filtered.length === 0 ? "Không có dữ liệu" : `Xuất tài chính (${filtered.length} giao dịch)`}
+                </button>
             </div>
 
-            <button className="w-full flex justify-center items-center gap-2 p-3.5 bg-primary text-white rounded-lg font-semibold text-[15px] hover:bg-primaryDark disabled:opacity-60 disabled:cursor-not-allowed"
-                onClick={handleExport} disabled={exporting || filtered.length === 0}>
-                <Icons.Download />
-                {exporting ? "Đang xuất..." : filtered.length === 0 ? "Không có dữ liệu để xuất" : `Xuất Excel (${filtered.length} giao dịch)`}
-            </button>
+            {/* Section 2: Feed Journal Export */}
+            <div className="bg-white rounded-[14px] border border-borderLight shadow-sm p-4">
+                <div className="flex items-center gap-2 mb-2">
+                    <Icons.Download />
+                    <div style={{ fontSize: 17, fontWeight: 700 }}>🦐 Xuất nhật ký thức ăn</div>
+                </div>
+                <div style={{ fontSize: 14, color: '#8a9e96', marginBottom: 14 }}>
+                    Xuất nhật ký kèm hình ảnh (URL), thời gian, ghi chú
+                </div>
+
+                <div className="bg-surfaceAlt rounded-[10px] p-3.5 mb-4">
+                    <div style={{ fontSize: 14, fontWeight: 700, color: '#5a7068', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Xem trước</div>
+                    <div style={{ fontSize: 15 }}>
+                        Nhật ký: <b>{filteredJournals.length}</b> mục
+                    </div>
+                </div>
+
+                <button
+                    className="w-full flex justify-center items-center gap-2 p-4 bg-[#0d6e5b] text-white rounded-lg font-bold text-[17px] hover:bg-[#0a5548] disabled:opacity-60 disabled:cursor-not-allowed active:scale-95 transition-all"
+                    onClick={handleExportJournal} disabled={exportingJournal || filteredJournals.length === 0}>
+                    <Icons.Download />
+                    {exportingJournal ? "Đang xuất..." : filteredJournals.length === 0 ? "Không có nhật ký" : `Xuất nhật ký (${filteredJournals.length} mục)`}
+                </button>
+            </div>
         </div>
     );
 }

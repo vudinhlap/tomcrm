@@ -38,14 +38,14 @@ export default function Header({
                     <Icons.Shrimp />
                 </div>
                 <div className="flex-1 min-w-0">
-                    <div className="text-lg font-extrabold tracking-tighter font-serif">{title}</div>
-                    <div className="text-[11px] opacity-80 font-medium">{subtitle}</div>
+                    <div className="text-xl font-extrabold tracking-tighter font-serif">{title}</div>
+                    <div className="text-[13px] opacity-80 font-medium">{subtitle}</div>
                 </div>
                 {userEmail && (
                     <div className="flex items-center gap-2">
                         <div className="text-right">
-                            <div className="text-[12px] font-semibold truncate max-w-[140px]">{userName || userEmail}</div>
-                            <div className="text-[10px] opacity-70 font-medium">
+                            <div className="text-[14px] font-semibold truncate max-w-[140px]">{userName || userEmail}</div>
+                            <div className="text-[12px] opacity-70 font-medium">
                                 {userRole === 'editor' ? '✏️ Biên tập' : '👁️ Xem'}
                             </div>
                         </div>

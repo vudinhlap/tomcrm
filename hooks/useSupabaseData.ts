@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
-import { Wallet, Category, CustomField, Transaction, AuditLog } from '../types';
+import { Wallet, Category, CustomField, Transaction, AuditLog, FeedJournal } from '../types';
 
 interface SupabaseData {
     wallets: Wallet[];
@@ -8,6 +8,7 @@ interface SupabaseData {
     customFields: CustomField[];
     transactions: Transaction[];
     auditLogs: AuditLog[];
+    feedJournals: FeedJournal[];
     loading: boolean;
     /* CRUD */
     addWallet: (w: Omit<Wallet, 'id'>) => Promise<Wallet | null>;
@@ -22,6 +23,9 @@ interface SupabaseData {
     addTransaction: (t: Omit<Transaction, 'id' | 'created_at' | 'updated_at'>) => Promise<Transaction | null>;
     softDeleteTransaction: (id: string) => Promise<boolean>;
     addAuditLog: (log: Omit<AuditLog, 'id' | 'created_at'>) => Promise<void>;
+    addFeedJournal: (entry: { journal_date: string; image_url: string; note: string }) => Promise<FeedJournal | null>;
+    deleteFeedJournal: (id: string) => Promise<boolean>;
+    uploadFeedImage: (file: File) => Promise<string | null>;
     refresh: () => Promise<void>;
 }
 
@@ -31,18 +35,20 @@ export function useSupabaseData(ownerId: string | null): SupabaseData {
     const [customFields, setCustomFields] = useState<CustomField[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+    const [feedJournals, setFeedJournals] = useState<FeedJournal[]>([]);
     const [loading, setLoading] = useState(true);
 
     const fetchAll = useCallback(async () => {
         if (!ownerId) return;
         setLoading(true);
 
-        const [wRes, cRes, cfRes, tRes, aRes] = await Promise.all([
+        const [wRes, cRes, cfRes, tRes, aRes, fjRes] = await Promise.all([
             supabase.from('wallets').select('*').eq('owner_id', ownerId).order('created_at'),
             supabase.from('categories').select('*').eq('owner_id', ownerId).order('sort_order'),
             supabase.from('custom_fields').select('*').eq('owner_id', ownerId).order('sort_order'),
             supabase.from('transactions').select('*').eq('owner_id', ownerId).order('created_at', { ascending: false }),
             supabase.from('audit_logs').select('*').eq('owner_id', ownerId).order('created_at', { ascending: false }).limit(200),
+            supabase.from('feed_journals').select('*').eq('owner_id', ownerId).order('journal_date', { ascending: false }),
         ]);
 
         if (wRes.data) setWallets(wRes.data.map(mapWallet));
@@ -50,6 +56,7 @@ export function useSupabaseData(ownerId: string | null): SupabaseData {
         if (cfRes.data) setCustomFields(cfRes.data.map(mapCustomField));
         if (tRes.data) setTransactions(tRes.data.map(mapTransaction));
         if (aRes.data) setAuditLogs(aRes.data.map(mapAuditLog));
+        if (fjRes.data) setFeedJournals(fjRes.data.map(mapFeedJournal));
 
         setLoading(false);
     }, [ownerId]);
@@ -166,13 +173,47 @@ export function useSupabaseData(ownerId: string | null): SupabaseData {
         }
     }, [ownerId]);
 
+    /* ---- Feed Journals ---- */
+    const addFeedJournal = useCallback(async (entry: { journal_date: string; image_url: string; note: string }): Promise<FeedJournal | null> => {
+        const { data, error } = await supabase.from('feed_journals')
+            .insert({ owner_id: ownerId, journal_date: entry.journal_date, image_url: entry.image_url, note: entry.note })
+            .select().single();
+        if (error || !data) return null;
+        const mapped = mapFeedJournal(data);
+        setFeedJournals(prev => [mapped, ...prev]);
+        return mapped;
+    }, [ownerId]);
+
+    const deleteFeedJournal = useCallback(async (id: string): Promise<boolean> => {
+        const { error } = await supabase.from('feed_journals').delete().eq('id', id);
+        if (error) return false;
+        setFeedJournals(prev => prev.filter(fj => fj.id !== id));
+        return true;
+    }, []);
+
+    const uploadFeedImage = useCallback(async (file: File): Promise<string | null> => {
+        const ext = file.name.split('.').pop() || 'jpg';
+        const path = `${ownerId}/${Date.now()}.${ext}`;
+        const { error } = await supabase.storage.from('feed-images').upload(path, file, {
+            cacheControl: '3600',
+            upsert: false,
+        });
+        if (error) {
+            console.error('Upload error:', error);
+            return null;
+        }
+        const { data: urlData } = supabase.storage.from('feed-images').getPublicUrl(path);
+        return urlData?.publicUrl || null;
+    }, [ownerId]);
+
     return {
-        wallets, categories, customFields, transactions, auditLogs, loading,
+        wallets, categories, customFields, transactions, auditLogs, feedJournals, loading,
         addWallet, updateWallet, deleteWallet,
         addCategory, updateCategory, deleteCategory,
         addCustomField, updateCustomField, deleteCustomField,
         addTransaction, softDeleteTransaction,
         addAuditLog: addAuditLogFn,
+        addFeedJournal, deleteFeedJournal, uploadFeedImage,
         refresh: fetchAll,
     };
 }
@@ -197,4 +238,7 @@ function mapTransaction(r: any): Transaction {
 }
 function mapAuditLog(r: any): AuditLog {
     return { id: r.id, actor: r.actor, action: r.action, entity: r.entity, entity_id: r.entity_id, before_data: r.before_data, after_data: r.after_data, created_at: r.created_at };
+}
+function mapFeedJournal(r: any): FeedJournal {
+    return { id: r.id, owner_id: r.owner_id, journal_date: r.journal_date, image_url: r.image_url, note: r.note || '', created_at: r.created_at };
 }

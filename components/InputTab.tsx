@@ -12,23 +12,21 @@ interface InputTabProps {
 }
 
 export default function InputTab({ wallets, categories, customFields, onSave }: InputTabProps) {
-  const [flow, setFlow] = useState<TransactionFlow>("EXPENSE");
+  const flow: TransactionFlow = "EXPENSE";
   const [amount, setAmount] = useState("");
   const [walletId, setWalletId] = useState(wallets[0]?.id || "");
-  const [toWalletId, setToWalletId] = useState(wallets[1]?.id || "");
   const [categoryId, setCategoryId] = useState("");
   const [note, setNote] = useState("");
   const [txnDate, setTxnDate] = useState(formatDate(new Date()));
   const [cfValues, setCfValues] = useState<Record<string, any>>({});
 
-  const filteredCats = categories.filter(c => c.flow === flow && c.is_active);
+  const filteredCats = categories.filter(c => c.flow === "EXPENSE" && c.is_active);
   const activeFields = customFields.filter(f => f.is_active);
 
   const handleSave = () => {
     const numAmount = parseAmount(amount);
     if (!amount || numAmount <= 0) return;
-    if (flow !== "TRANSFER" && !categoryId) return;
-    if (flow === "TRANSFER" && walletId === toWalletId) return;
+    if (!categoryId) return;
 
     const txn: Transaction = {
       id: generateId(),
@@ -36,8 +34,8 @@ export default function InputTab({ wallets, categories, customFields, onSave }: 
       flow,
       amount: numAmount,
       wallet_id: walletId,
-      to_wallet_id: flow === "TRANSFER" ? toWalletId : null,
-      category_id: flow === "TRANSFER" ? null : categoryId,
+      to_wallet_id: null,
+      category_id: categoryId,
       note,
       custom_fields: cfValues,
       created_at: new Date().toISOString(),
@@ -48,35 +46,16 @@ export default function InputTab({ wallets, categories, customFields, onSave }: 
     setAmount(""); setNote(""); setCfValues({});
   };
 
-  const flowBtns = [
-    { key: "EXPENSE" as const, label: "Chi", color: "text-expense", bg: "bg-expenseLight", border: "border-expense" },
-    { key: "INCOME" as const, label: "Thu", color: "text-income", bg: "bg-incomeLight", border: "border-income" },
-    { key: "TRANSFER" as const, label: "Chuyển", color: "text-transfer", bg: "bg-transferLight", border: "border-transfer" },
-  ];
-
   return (
     <div className="p-4 animate-[fadeIn_0.3s_ease]">
       <div className="bg-white rounded-[14px] border border-borderLight shadow-sm p-5">
-        <div className="text-base font-bold mb-4">Nhập giao dịch mới</div>
-
-        {/* Flow selector */}
-        <div className="flex gap-2 mb-5 bg-surfaceAlt p-1 rounded-[10px]">
-          {flowBtns.map(f => (
-            <button key={f.key}
-              onClick={() => { setFlow(f.key); setCategoryId(""); }}
-              className={`flex-1 flex justify-center py-2.5 px-2 rounded-lg text-sm transition-all duration-200 border-2
-                ${flow === f.key ? `${f.bg} ${f.color} ${f.border} font-bold` : "bg-transparent text-textMuted border-transparent font-medium"}`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+        <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 16 }}>Nhập chi phí</div>
 
         {/* Amount */}
         <div className="mb-3.5">
           <FormLabel>Số tiền (VNĐ)</FormLabel>
           <FormInput sizing="lg"
-            className={flow === "INCOME" ? "text-income" : flow === "EXPENSE" ? "text-expense" : "text-transfer"}
+            className="text-expense"
             type="text" inputMode="numeric" value={amount} onChange={e => setAmount(formatAmountInput(e.target.value))}
             placeholder="0" />
         </div>
@@ -89,36 +68,25 @@ export default function InputTab({ wallets, categories, customFields, onSave }: 
 
         {/* Wallet */}
         <div className="mb-3.5">
-          <FormLabel>{flow === "TRANSFER" ? "Ví nguồn" : "Ví"}</FormLabel>
+          <FormLabel>Ví</FormLabel>
           <FormSelect value={walletId} onChange={e => setWalletId(e.target.value)}>
             {wallets.filter(w => w.is_active).map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
           </FormSelect>
         </div>
 
-        {flow === "TRANSFER" && (
-          <div className="mb-3.5">
-            <FormLabel>Ví đích</FormLabel>
-            <FormSelect value={toWalletId} onChange={e => setToWalletId(e.target.value)}>
-              {wallets.filter(w => w.is_active && w.id !== walletId).map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
-            </FormSelect>
-          </div>
-        )}
-
         {/* Category */}
-        {flow !== "TRANSFER" && (
-          <div className="mb-3.5">
-            <FormLabel>Danh mục</FormLabel>
-            <FormSelect value={categoryId} onChange={e => setCategoryId(e.target.value)}>
-              <option value="">-- Chọn danh mục --</option>
-              {filteredCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </FormSelect>
-          </div>
-        )}
+        <div className="mb-3.5">
+          <FormLabel>Danh mục</FormLabel>
+          <FormSelect value={categoryId} onChange={e => setCategoryId(e.target.value)}>
+            <option value="">-- Chọn danh mục --</option>
+            {filteredCats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </FormSelect>
+        </div>
 
         {/* Custom fields */}
-        {activeFields.length > 0 && flow !== "TRANSFER" && (
+        {activeFields.length > 0 && (
           <div className="border-t border-borderLight pt-3.5 mb-3.5">
-            <div className="text-xs font-bold text-textMuted mb-2 uppercase tracking-wider">Thông tin thêm</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#8a9e96', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Thông tin thêm</div>
             {activeFields.map(f => (
               <div key={f.id} className="mb-2.5">
                 <FormLabel>{f.field_name}</FormLabel>
@@ -140,12 +108,12 @@ export default function InputTab({ wallets, categories, customFields, onSave }: 
         {/* Note */}
         <div className="mb-4.5">
           <FormLabel>Ghi chú</FormLabel>
-          <textarea className="w-full p-2.5 border-[1.5px] border-border rounded-lg bg-surface text-sm transition-all resize-y focus:outline-none focus:ring-4 focus:ring-primaryLight focus:border-primary"
+          <textarea className="w-full p-3 border-[1.5px] border-border rounded-lg bg-surface text-base transition-all resize-y focus:outline-none focus:ring-4 focus:ring-primaryLight focus:border-primary"
             value={note} onChange={e => setNote(e.target.value)} rows={2} placeholder="Nhập ghi chú..." />
         </div>
 
-        <button className="w-full flex justify-center items-center gap-1.5 p-3.5 bg-primary text-white rounded-lg font-semibold text-[15px] hover:bg-primaryDark active:scale-95 transition-all" onClick={handleSave}>
-          <Icons.Check /> Lưu giao dịch
+        <button className="w-full flex justify-center items-center gap-2 p-4 bg-primary text-white rounded-lg font-bold text-[17px] hover:bg-primaryDark active:scale-95 transition-all" onClick={handleSave}>
+          <Icons.Check /> Lưu chi phí
         </button>
       </div>
     </div>

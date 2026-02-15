@@ -9,14 +9,14 @@ import BottomNav from "./components/BottomNav";
 import OverviewTab from "./components/OverviewTab";
 import InputTab from "./components/InputTab";
 import TransactionListTab from "./components/TransactionListTab";
-import ReportsTab from "./components/ReportsTab";
+import FeedJournalTab from "./components/FeedJournalTab";
 import SettingsTab from "./components/SettingsTab";
 
 const TABS = [
   { key: "overview", label: "Tổng quan", icon: Icons.Overview },
-  { key: "input", label: "Nhập thu/chi", icon: Icons.Input },
+  { key: "input", label: "Nhập chi phí", icon: Icons.Input },
   { key: "transactions", label: "Sổ giao dịch", icon: Icons.List },
-  { key: "reports", label: "Báo cáo", icon: Icons.Report },
+  { key: "journal", label: "Nhật ký", icon: Icons.Feed },
   { key: "settings", label: "Cài đặt", icon: Icons.Settings },
 ];
 
@@ -119,8 +119,15 @@ function AppContent() {
             } : undefined}
           />
         )}
-        {activeTab === "reports" && (
-          <ReportsTab txns={activeTxns} wallets={data.wallets} categories={data.categories} />
+        {activeTab === "journal" && (
+          <FeedJournalTab
+            feedJournals={data.feedJournals}
+            addFeedJournal={data.addFeedJournal}
+            deleteFeedJournal={data.deleteFeedJournal}
+            uploadFeedImage={data.uploadFeedImage}
+            readOnly={!isEditor}
+            showNotification={showNotification}
+          />
         )}
         {activeTab === "settings" && (
           <SettingsTab
@@ -130,6 +137,7 @@ function AppContent() {
             customFields={data.customFields} setCustomFields={() => { }}
             auditLogs={data.auditLogs} showNotification={showNotification}
             addAuditLog={addAuditLog} transactions={activeTxns}
+            feedJournals={data.feedJournals}
             readOnly={!isEditor}
             supabaseData={data}
           />

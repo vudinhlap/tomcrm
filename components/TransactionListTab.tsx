@@ -39,14 +39,14 @@ export default function TransactionListTab({ txns, wallets, categories, customFi
       <div className="bg-white rounded-[14px] border border-borderLight shadow-sm p-3 mb-3">
         <div className="relative mb-2.5">
           <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-textMuted"><Icons.Search /></span>
-          <input className="w-full py-2.5 pr-3 pl-9 border-[1.5px] border-border rounded-lg bg-surface text-sm transition-all focus:outline-none focus:ring-4 focus:ring-primaryLight focus:border-primary"
+          <input className="w-full py-3 pr-3 pl-9 border-[1.5px] border-border rounded-lg bg-surface text-base transition-all focus:outline-none focus:ring-4 focus:ring-primaryLight focus:border-primary"
             value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm kiếm..." />
         </div>
         <div className="flex gap-1.5 flex-wrap">
           {["ALL", "INCOME", "EXPENSE", "TRANSFER"].map(f => {
             const isActive = filterFlow === f;
             const isAll = f === "ALL";
-            const baseClass = "px-3 py-1.5 rounded-lg text-[11px] font-semibold border-[1.5px] transition-all";
+            const baseClass = "px-3.5 py-2 rounded-lg text-[13px] font-bold border-[1.5px] transition-all";
             let activeClass = "";
             if (isActive) {
               if (isAll) activeClass = "bg-primaryLight text-primary border-primary";
@@ -63,7 +63,7 @@ export default function TransactionListTab({ txns, wallets, categories, customFi
               </button>
             );
           })}
-          <select className="px-2 py-1.5 border-[1.5px] border-border rounded-lg bg-surface text-[11px] flex-1 min-w-[80px]"
+          <select className="px-2.5 py-2 border-[1.5px] border-border rounded-lg bg-surface text-[13px] flex-1 min-w-[80px]"
             value={filterWallet} onChange={e => setFilterWallet(e.target.value)}>
             <option value="ALL">Tất cả ví</option>
             {wallets.filter(w => w.is_active).map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
@@ -71,7 +71,7 @@ export default function TransactionListTab({ txns, wallets, categories, customFi
         </div>
       </div>
 
-      <div className="text-xs text-textMuted mb-2 font-semibold">{filtered.length} giao dịch</div>
+      <div className="text-sm text-textMuted mb-2 font-semibold">{filtered.length} giao dịch</div>
 
       {/* Transaction list */}
       {filtered.map(t => {
@@ -86,19 +86,19 @@ export default function TransactionListTab({ txns, wallets, categories, customFi
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 <div className="flex items-center gap-1.5 mb-1">
-                  <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide flex items-center gap-1 ${flowBg(t.flow)} ${flowColor(t.flow)}`}>
+                  <span className={`px-3 py-1 rounded-full text-[13px] font-bold tracking-wide flex items-center gap-1 ${flowBg(t.flow)} ${flowColor(t.flow)}`}>
                     {t.flow === "INCOME" && <Icons.ArrowUp />}
                     {t.flow === "EXPENSE" && <Icons.ArrowDown />}
                     {t.flow === "TRANSFER" && <Icons.Transfer />}
                     {flowLabel(t.flow)}
                   </span>
-                  <span className="text-xs text-textMuted">{t.txn_date}</span>
+                  <span className="text-sm text-textMuted">{t.txn_date}</span>
                 </div>
-                <div className="text-sm font-semibold mb-0.5">
+                <div className="text-base font-bold mb-1">
                   {t.flow === "TRANSFER" ? `${w?.name} → ${tw?.name}` : cat?.name || "—"}
                 </div>
-                {t.note && <div className="text-xs text-textSecondary mb-0.5">{t.note}</div>}
-                <div className="text-[11px] text-textMuted flex items-center gap-1">
+                {t.note && <div className="text-sm text-textSecondary mb-1">{t.note}</div>}
+                <div className="text-[13px] text-textMuted flex items-center gap-1">
                   <Icons.Wallet /> {w?.name}
                   {cfEntries.length > 0 && (
                     <span className="ml-1.5">
@@ -108,11 +108,11 @@ export default function TransactionListTab({ txns, wallets, categories, customFi
                 </div>
               </div>
               <div className="text-right">
-                <div className={`text-base font-extrabold ${flowColor(t.flow)}`}>
+                <div className={`text-lg font-extrabold ${flowColor(t.flow)}`}>
                   {t.flow === "INCOME" ? "+" : t.flow === "EXPENSE" ? "-" : ""}{formatMoney(t.amount)}đ
                 </div>
                 {onDelete && (
-                  <button className="flex items-center gap-1 bg-expenseLight text-danger hover:bg-danger hover:text-white rounded px-2 py-0.5 text-[10px] mt-1 ml-auto transition-colors"
+                  <button className="flex items-center gap-1 bg-expenseLight text-danger hover:bg-danger hover:text-white rounded px-2.5 py-1 text-[12px] mt-1 ml-auto transition-colors"
                     onClick={() => onDelete(t.id)}>
                     <Icons.Delete /> Xoá
                   </button>

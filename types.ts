@@ -58,6 +58,15 @@ export interface AuditLog {
   created_at: string;
 }
 
+export interface FeedJournal {
+  id: string;
+  owner_id: string;
+  journal_date: string;
+  image_url: string;
+  note: string;
+  created_at: string;
+}
+
 export interface NotificationState {
   msg: string;
   type: 'success' | 'error';

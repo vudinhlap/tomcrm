@@ -277,11 +277,13 @@ export default function FeedJournalTab({
                                             {entry.tags.map(tag => (
                                                 <span key={tag} style={{
                                                     fontSize: 12,
-                                                    fontWeight: 700,
+                                                    fontWeight: 600,
                                                     color: '#0d6e5b',
-                                                    background: '#eafcf8',
-                                                    padding: '3px 8px',
-                                                    borderRadius: 12,
+                                                    background: '#ffffff',
+                                                    border: '1px solid #0d6e5b',
+                                                    padding: '4px 10px',
+                                                    borderRadius: 16,
+                                                    boxShadow: '0 1px 2px rgba(13, 110, 91, 0.1)'
                                                 }}>
                                                     {tag}
                                                 </span>

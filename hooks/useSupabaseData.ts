@@ -56,7 +56,10 @@ export function useSupabaseData(ownerId: string | null): SupabaseData {
         if (cfRes.data) setCustomFields(cfRes.data.map(mapCustomField));
         if (tRes.data) setTransactions(tRes.data.map(mapTransaction));
         if (aRes.data) setAuditLogs(aRes.data.map(mapAuditLog));
-        if (fjRes.data) setFeedJournals(fjRes.data.map(mapFeedJournal));
+        if (fjRes.data) {
+            console.log('Fetched Feed Journals:', fjRes.data);
+            setFeedJournals(fjRes.data.map(mapFeedJournal));
+        }
 
         setLoading(false);
     }, [ownerId]);

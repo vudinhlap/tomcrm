@@ -67,7 +67,7 @@ export default function FeedJournalTab({
                 setSelectedFile(null);
                 if (fileInputRef.current) fileInputRef.current.value = "";
             } else {
-                showNotification("Lỗi lưu nhật ký!", "error");
+                showNotification("Lỗi lưu nhật ký! (Có thể do chưa chạy lệnh SQL)", "error");
             }
         } catch {
             showNotification("Lỗi không xác định!", "error");

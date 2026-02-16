@@ -123,15 +123,16 @@ export default function ExportExcelTab({ transactions, wallets, categories, cust
             wsReadme["!cols"] = [{ wch: 20 }, { wch: 50 }];
             XLSX.utils.book_append_sheet(wb, wsReadme, "README");
 
-            const journalHeaders = ["Ngày", "Ghi chú", "Hình ảnh (URL)", "Ngày tạo"];
+            const journalHeaders = ["Ngày", "Tag", "Ghi chú", "Hình ảnh (URL)", "Ngày tạo"];
             const journalRows = filteredJournals.map(j => [
                 j.journal_date,
+                j.tags?.join(", ") || "",
                 j.note || "",
                 j.image_url || "",
                 j.created_at || "",
             ]);
             const wsJournal = XLSX.utils.aoa_to_sheet([journalHeaders, ...journalRows]);
-            wsJournal["!cols"] = [{ wch: 14 }, { wch: 40 }, { wch: 60 }, { wch: 22 }];
+            wsJournal["!cols"] = [{ wch: 14 }, { wch: 20 }, { wch: 40 }, { wch: 60 }, { wch: 22 }];
             XLSX.utils.book_append_sheet(wb, wsJournal, "NHAT_KY_THUC_AN");
 
             const fileName = `TomCRM_NhatKy_${dateFrom}_${dateTo}.xlsx`;

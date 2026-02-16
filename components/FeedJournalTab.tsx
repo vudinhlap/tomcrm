@@ -22,15 +22,111 @@ export default function FeedJournalTab({
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [saving, setSaving] = useState(false);
     const [expandedImg, setExpandedImg] = useState<string | null>(null);
+    const [isCompressing, setIsCompressing] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const compressImage = async (file: File): Promise<File> => {
+        // If already small enough (<= 200KB), return as is
+        if (file.size <= 200 * 1024) return file;
+
+        return new Promise((resolve) => {
+            const img = new Image();
+            const objectUrl = URL.createObjectURL(file);
+            img.src = objectUrl;
+
+            img.onload = () => {
+                URL.revokeObjectURL(objectUrl);
+                const canvas = document.createElement("canvas");
+                let width = img.width;
+                let height = img.height;
+                const MAX_DIM = 1200; // Resize large images first
+
+                if (width > height) {
+                    if (width > MAX_DIM) {
+                        height *= MAX_DIM / width;
+                        width = MAX_DIM;
+                    }
+                } else {
+                    if (height > MAX_DIM) {
+                        width *= MAX_DIM / height;
+                        height = MAX_DIM;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext("2d");
+                if (!ctx) {
+                    resolve(file); // Fallback
+                    return;
+                }
+                ctx.drawImage(img, 0, 0, width, height);
+
+                // Iterative compression
+                let quality = 0.9;
+                const step = 0.1;
+
+                const process = (q: number) => {
+                    canvas.toBlob(
+                        (blob) => {
+                            if (!blob) {
+                                resolve(file);
+                                return;
+                            }
+                            // Stop if size is good OR quality is too low
+                            if (blob.size <= 200 * 1024 || q <= 0.2) {
+                                resolve(new File([blob], file.name, {
+                                    type: "image/jpeg",
+                                    lastModified: Date.now()
+                                }));
+                            } else {
+                                process(q - step);
+                            }
+                        },
+                        "image/jpeg",
+                        q
+                    );
+                };
+                process(quality);
+            };
+
+            img.onerror = () => {
+                URL.revokeObjectURL(objectUrl);
+                resolve(file);
+            };
+        });
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-            setSelectedFile(file);
-            const reader = new FileReader();
-            reader.onload = () => setPreviewUrl(reader.result as string);
-            reader.readAsDataURL(file);
+            setIsCompressing(true);
+            try {
+                const compressed = await compressImage(file);
+                setSelectedFile(compressed);
+
+                // Show notification if size changed
+                if (file.size !== compressed.size) {
+                    const originalSize = (file.size / 1024).toFixed(0);
+                    const newSize = (compressed.size / 1024).toFixed(0);
+                    showNotification(`Đã nén ảnh: ${originalSize}KB -> ${newSize}KB`, "success");
+                }
+
+                const reader = new FileReader();
+                reader.onload = () => setPreviewUrl(reader.result as string);
+                reader.readAsDataURL(compressed);
+            } catch (error) {
+                console.error("Compression error:", error);
+                showNotification("Lỗi nén ảnh, dùng ảnh gốc", "error");
+                setSelectedFile(file);
+
+                // Fallback preview
+                const reader = new FileReader();
+                reader.onload = () => setPreviewUrl(reader.result as string);
+                reader.readAsDataURL(file);
+            } finally {
+                setIsCompressing(false);
+            }
         }
     };
 
@@ -224,10 +320,10 @@ export default function FeedJournalTab({
 
                     <button
                         onClick={handleSave}
-                        disabled={saving}
+                        disabled={saving || isCompressing}
                         className="w-full flex justify-center items-center gap-2 p-4 bg-primary text-white rounded-lg font-bold text-[17px] hover:bg-primaryDark active:scale-95 transition-all disabled:opacity-50"
                     >
-                        {saving ? "Đang lưu..." : <><Icons.Check /> Lưu nhật ký</>}
+                        {saving ? "Đang lưu..." : isCompressing ? "Đang xử lý ảnh..." : <><Icons.Check /> Lưu nhật ký</>}
                     </button>
                 </div>
             )}
